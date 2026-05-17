@@ -1,0 +1,27 @@
+name: Aktualizace odpoctu
+on:
+  schedule:
+    - cron: '0 0 * * *' # Spustí se automaticky každou půlnoc
+  workflow_dispatch: # Umožní ti skript spustit hned ručně
+
+jobs:
+  update-days:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout kodu
+      uses: actions/checkout@v4
+
+    - name: Spocitat dny
+      run: |
+        TARGET_DATE="2026-07-18"
+        CURRENT_DATE=$(date +%Y-%m-%d)
+        DIFF=$(( ($(date -d "$TARGET_DATE" +%s) - $(date -d "$CURRENT_DATE" +%s)) / 86400 ))
+        echo "{\"days\": $DIFF}" > dovca.json
+
+    - name: Ulozit zmeny na GitHub
+      run: |
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        git add dovca.json
+        git commit -m "Automaticky odpocet" || exit 0
+        git push

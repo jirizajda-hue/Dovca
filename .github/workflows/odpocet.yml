@@ -1,8 +1,8 @@
 name: Aktualizace odpoctu
 on:
   schedule:
-    - cron: '0 0 * * *' # Spustí se v 0:00 UTC (ve 2:00 ráno našeho letního času / 3:00 zimního)
-  workflow_dispatch: # Umožní ti skript spustit kdykoliv ručně
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update-days:

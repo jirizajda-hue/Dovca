@@ -24,5 +24,4 @@ jobs:
         git config --global user.email "action@github.com"
         git add dovca.json
         git commit -m "Automaticky odpocet" || exit 0
-        git pull --rebase origin main -X theirs
-        git push origin HEAD:main
+        git push

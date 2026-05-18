@@ -10,8 +10,6 @@ jobs:
     steps:
     - name: Checkout kodu
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
     - name: Spocitat dny
       run: |
@@ -26,5 +24,6 @@ jobs:
         git config --global user.email "action@github.com"
         git add dovca.json
         git commit -m "Automaticky odpocet" || exit 0
-        git pull --rebase origin main
-        git push origin main
+        git fetch origin main
+        git merge origin/main -X theirs --allow-unrelated-histories -m "Merge konfliktů"
+        git push origin HEAD:main

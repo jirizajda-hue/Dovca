@@ -19,11 +19,9 @@ jobs:
         echo "{\"days\": $DIFF}" > dovca.json
 
     - name: Ulozit zmeny na GitHub
-      run: |
-        git config --global user.name "GitHub Action"
-        git config --global user.email "action@github.com"
-        git add dovca.json
-        git commit -m "Automaticky odpocet" || exit 0
-        git fetch origin main
-        git merge origin/main -X theirs --allow-unrelated-histories -m "Merge konfliktů"
-        git push origin HEAD:main
+      uses: test-room-7/action-update-file@v1
+      with:
+        file: dovca.json
+        branch: main
+        commit-msg: "Automaticky odpocet"
+        token: ${{ secrets.GITHUB_TOKEN }}

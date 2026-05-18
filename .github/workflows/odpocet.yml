@@ -1,28 +1,38 @@
-name: Aktualizace odpoctu
+name: update-days
+
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 5 * * *"   # každý den v 5:00
   workflow_dispatch:
 
 jobs:
   update-days:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout kodu
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # důležité!
 
-    - name: Spocitat dny
-      run: |
-        TARGET=$(date -d "2026-07-18" +%s)
-        CURRENT=$(date -d "today 00:00:00" +%s)
-        DIFF=$(( (TARGET - CURRENT) / 86400 ))
-        echo "{\"days\": $DIFF}" > dovca.json
+      - name: Spocitat dny
+        run: |
+          python3 scripts/pocitadlo.py   # nebo tvůj skript
 
-    - name: Ulozit zmeny na GitHub
-      run: |
-        git config --global user.name "GitHub Action"
-        git config --global user.email "action@github.com"
-        git add dovca.json
-        git commit -m "Automaticky odpocet" || exit 0
-        git pull origin main --rebase
-        git push origin HEAD:main
+      - name: Nastavit Git
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
+      - name: Pull latest changes
+        run: |
+          git pull --rebase
+
+      - name: Commit changes
+        run: |
+          git add .
+          git commit -m "Automaticky odpocet" || echo "No changes to commit"
+
+      - name: Push changes
+        run: |
+          git push

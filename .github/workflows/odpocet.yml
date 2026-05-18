@@ -13,11 +13,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # důležité!
+          fetch-depth: 0
 
       - name: Spocitat dny
         run: |
-          python3 scripts/pocitadlo.py   # nebo tvůj skript
+          python3 scripts/pocitadlo.py
 
       - name: Nastavit Git
         run: |
@@ -25,14 +25,12 @@ jobs:
           git config --global user.email "action@github.com"
 
       - name: Pull latest changes
-        run: |
-          git pull --rebase
+        run: git pull --rebase
 
       - name: Commit changes
         run: |
           git add .
-          git commit -m "Automaticky odpocet" || echo "No changes to commit"
+          git commit -m "Automaticky dopocet" || echo "No changes to commit"
 
       - name: Push changes
-        run: |
-          git push
+        run: git push

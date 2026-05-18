@@ -1,8 +1,8 @@
 name: Aktualizace odpoctu
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *' # Spustí se automaticky každou půlnoc
+  workflow_dispatch: # Umožní ti skript spustit hned ručně
 
 jobs:
   update-days:
@@ -13,9 +13,9 @@ jobs:
 
     - name: Spocitat dny
       run: |
-        TARGET=$(date -d "2026-07-18" +%s)
-        CURRENT=$(date -d "today 00:00:00" +%s)
-        DIFF=$(( (TARGET - CURRENT) / 86400 ))
+        TARGET_DATE="2026-07-18"
+        CURRENT_DATE=$(date +%Y-%m-%d)
+        DIFF=$(( ($(date -d "$TARGET_DATE" +%s) - $(date -d "$CURRENT_DATE" +%s)) / 86400 ))
         echo "{\"days\": $DIFF}" > dovca.json
 
     - name: Ulozit zmeny na GitHub

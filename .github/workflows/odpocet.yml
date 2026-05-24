@@ -1,21 +1,24 @@
 name: update-days
 on:
   schedule:
-    - cron: "0 0 * * *" # Spustí se ve 2:00 ráno našeho letního času
+    - cron: "0 0 * * *" # Spustí se přesně ve 0:00 UTC (což jsou 2:00 ráno našeho času)
   workflow_dispatch:
 
 jobs:
   update-days:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Natvrdo povolí robotovi zápis do repozitáře
+      contents: write
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
 
     - name: Spocitat dny
       run: |
-        TARGET=$(date -d "2026-07-18" +%s)
+        # Vynutíme české časové pásmo pro správný výpočet dne
+        export TZ="Europe/Prague"
+        
+        TARGET=$(date -d "2026-07-19" +%s)
         CURRENT=$(date -d "today 00:00:00" +%s)
         DIFF=$(( (TARGET - CURRENT) / 86400 ))
         echo "{\"days\": $DIFF}" > dovca.json

@@ -16,34 +16,24 @@ jobs:
     - name: Instalovat jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Stahnout kompletní cenu IONQ přes Finnhub
+    - name: Stahnout realnou cenu s Pre/Post marketem
       run: |
-        TOKEN="d7t3v4hr01qugn098p9gd7t3v4hr01qugn098pa0"
+        API_KEY="I6S6OS5NEXR4EU40"
         
-        # Voláme rozšířené API, které umí Pre/Post market global data
-        JSON_DATA=$(curl -s "https://finnhub.io/api/v1/quote?symbol=IONQ&token=$TOKEN")
+        # Alpha Vantage s funkcí GLOBAL_QUOTE vrací nejnovější cenu (přes den živou, v noci finální po zavření aftermarketu)
+        JSON_DATA=$(curl -s "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IONQ&apikey=$API_KEY")
         
-        # Načteme hlavní cenu, pre-market i post-market (Finnhub je dává do specifických polí, pokud jsou dostupná)
-        # Pokud nejsou v hlavním quote, pojistíme to kontrolou extended hodin
-        REG_PRICE=$(echo "$JSON_DATA" | jq '.c // empty')
+        CENA_AKCIE=$(echo "$JSON_DATA" | jq -r '."Global Quote"."05. price" // empty')
         
-        # Finnhub někdy dává po-obchodní fázi do skrytých polí t, h, l v závislosti na typu účtu,
-        # proto pro jistotu uděláme ještě kontrolu přes záložní bezplatné volání pro globální ticker:
-        GLOBAL_DATA=$(curl -s "https://finnhub.io/api/v1/stock/profile2?symbol=IONQ&token=$TOKEN")
+        if [ -z "$CENA_AKCIE" ] || [ "$CENA_AKCIE" = "null" ]; then
+          CENA_AKCIE="0.00"
+        fi
         
-        # Pokud trh stojí, finální cenu vytáhneme přesnou logikou. 
-        # Abychom měli jistotu, že dostaneš 69.74, zkontrolujeme, zda se hodnota liší.
-        FINAL_PRICE=$REG_PRICE
-        
-        # Výpočet a zápis ceny
-        IONQ_PRICE=$(printf "%.2f" $FINAL_PRICE)
-        
-        # Pokud je víkend nebo noc a Finnhub neaktualizuje extended přes free API, 
-        # vytáhneme cenu upravenou o reálný stav. Pro teď tam vynutíme kontrolu správného pole:
+        IONQ_PRICE=$(printf "%.2f" $CENA_AKCIE)
         echo "{\"cena\": $IONQ_PRICE}" > ionq.json
 
     - name: Ulozit do ionq.json
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "Oprava pro extended market ceny IONQ"
+        commit_message: "Aktualizace ceny pres Alpha Vantage"
         file_pattern: 'ionq.json'

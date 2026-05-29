@@ -1,7 +1,7 @@
 name: update-days
 on:
   schedule:
-    - cron: "17 0 * * *" # Spustí se ve 2:17 ráno našeho času (mimo špičku GitHubu)
+    - cron: "17 0 * * *" # Spustí se ve 2:17 ráno našeho času
   workflow_dispatch:
 
 jobs:
@@ -13,20 +13,16 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Instalovat jq
-      run: sudo apt-get update && sudo apt-get install -y jq
-
-    - name: Stahnout akcii a spocitat dny
+    - name: Spocitat dny
       run: |
         export TZ="Europe/Prague"
         TARGET=$(date -d "2026-07-18" +%s)
         CURRENT=$(date -d "today 00:00:00" +%s)
         DIFF=$(( (TARGET - CURRENT) / 86400 ))
-        IONQ_PRICE=$(curl -s "https://query1.finance.yahoo.com/v8/finance/chart/IONQ" | jq '.chart.result[0].meta.regularMarketPrice' | xargs printf "%.2f")
-        echo "{\"days\": $DIFF, \"ionq\": $IONQ_PRICE}" > dovca.json
+        echo "{\"days\": $DIFF}" > dovca.json
 
     - name: Ulozit zmeny na GitHub
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "Oprava odsazeni, casu a pridani IONQ"
+        commit_message: "Cisty odpocet dovolene"
         file_pattern: 'dovca.json'

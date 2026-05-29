@@ -1,7 +1,7 @@
 name: update-ionq
 on:
   schedule:
-    - cron: "0 * * * 1-5" # Spustí se každou celou hodinu od pondělí do pátku
+    - cron: "0 * * * 1-5" # Spustí se každou celou hodinu od pondelí do pátku
   workflow_dispatch: # Aby sis to mohl kdykoliv pustit ručně
 
 jobs:
@@ -16,30 +16,24 @@ jobs:
     - name: Instalovat jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Stahnout cenu IONQ
+    - name: Stahnout cenu IONQ přes Finnhub
       run: |
-        # Stažení dat s podporou Pre/Post marketu
-        JSON_DATA=$(curl -s "https://query1.finance.yahoo.com/v8/finance/chart/IONQ?includePrePost=true")
+        TOKEN="d7t3v4hr01qugn098p9gd7t3v4hr01qugn098pa0"
         
-        # Logika pro výběr nejčerstvější ceny
-        POST=$(echo "$JSON_DATA" | jq '.chart.result[0].meta.postMarketPrice // empty')
-        PRE=$(echo "$JSON_DATA" | jq '.chart.result[0].meta.preMarketPrice // empty')
-        REG=$(echo "$JSON_DATA" | jq '.chart.result[0].meta.regularMarketPrice // empty')
+        JSON_DATA=$(curl -s "https://finnhub.io/api/v1/quote?symbol=IONQ&token=$TOKEN")
         
-        FINAL_PRICE="0.00"
-        if [ ! -z "$POST" ]; then
-          FINAL_PRICE=$POST
-        elif [ ! -z "$PRE" ]; then
-          FINAL_PRICE=$PRE
-        elif [ ! -z "$REG" ]; then
-          FINAL_PRICE=$REG
+        # Finnhub vrací v klíči 'c' aktuální cenu (včetně pre/after marketu, pokud zrovna běží)
+        CENA_AKCIE=$(echo "$JSON_DATA" | jq '.c // empty')
+        
+        if [ -z "$CENA_AKCIE" ] || [ "$CENA_AKCIE" = "null" ]; then
+          CENA_AKCIE="0.00"
         fi
         
-        IONQ_PRICE=$(printf "%.2f" $FINAL_PRICE)
+        IONQ_PRICE=$(printf "%.2f" $CENA_AKCIE)
         echo "{\"cena\": $IONQ_PRICE}" > ionq.json
 
     - name: Ulozit do ionq.json
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "Aktualizace ceny IONQ"
+        commit_message: "Aktualizace ceny IONQ pres Finnhub API"
         file_pattern: 'ionq.json'
